@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书位置查询 | 纸语传音·阅读回声项目</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "微软雅黑",sans-serif;
+        }
+        body{
+            background-color: #f0f8fa;
+            padding: 20px 15px;
+        }
+        .container{
+            max-width: 650px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 6px 20px rgba(23, 162, 184, 0.15);
+            overflow: hidden;
+        }
+        .top-banner{
+            background: linear-gradient(135deg,#17a2b8,#20c9d2);
+            text-align: center;
+            padding: 30px 20px;
+            color: #fff;
+            position: relative;
+        }
+        .top-banner h2{
+            font-size: 26px;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+        .top-banner p{
+            opacity: 0.95;
+            font-size: 15px;
+        }
+        .main-wrap{
+            padding: 30px;
+        }
+        .search-box{
+            display: flex;
+            margin-bottom: 15px;
+        }
+        #bookInput{
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #ccecef;
+            border-right: none;
+            border-radius: 12px 0 0 12px;
+            font-size: 16px;
+            outline: none;
+            background: #fbfefe;
+            transition: 0.3s ease;
+        }
+        #bookInput:focus{
+            border-color: #17a2b8;
+            box-shadow: 0 0 0 4px rgba(23,162,184,0.18);
+        }
+        .search-btn{
+            padding: 15px 24px;
+            background-color: #17a2b8;
+            color: #fff;
+            border: none;
+            border-radius: 0 12px 12px 0;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.25s ease;
+        }
+        .search-btn:hover{
+            background-color: #138a9c;
+        }
+        .filter-bar{
+            background: #f8fbfc;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid #edf4f6;
+        }
+        .filter-row{
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .filter-select,.filter-input{
+            padding: 8px 12px;
+            border: 1px solid #ccecef;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            color: #333;
+        }
+        .filter-btn{
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .filter-confirm{
+            background: #17a2b8;
+            color: #fff;
+        }
+        .filter-reset{
+            background: #e9ecef;
+            color: #555;
+        }
+        .result-box{
+            min-height: 90px;
+            padding: 22px;
+            background: #f0f8fa;
+            border-radius: 14px;
+            line-height: 2.2;
+            font-size: 17px;
+            margin-bottom: 25px;
+            border: 1px solid #e2eff2;
+        }
+        .book-name{
+            color: #222;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .book-addr{
+            color: #17a2b8;
+            font-weight: 500;
+        }
+        .book-extra{
+            font-size: 14px;
+            color: #666;
+            margin-top:6px;
+        }
+        .star{
+            color:#ffb400;
+        }
+        /* ========== 排行榜完善样式 ========== */
+        .rank-box{
+            background: #f8fbfc;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 25px;
+            border: 1px solid #edf4f6;
+        }
+        .rank-title{
+            font-size: 16px;
+            color: #17a2b8;
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        .rank-title::before{
+            content: "";
+            width: 4px;
+            height: 18px;
+            background: #17a2b8;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+        .rank-title-icon{
+            transition: transform 0.3s;
+        }
+        .rank-content {
+            max-height:0;
+            overflow:hidden;
+            transition: max-height 0.45s ease;
+        }
+        .rank-content.open{
+            max-height:600px;
+        }
+        .rank-tab{
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .rank-tab button{
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            background: #e6f4f7;
+            color: #17a2b8;
+            font-size: 13px;
+            cursor: pointer;
+            transition:0.2s;
+        }
+        .rank-tab button.active{
+            background: #17a2b8;
+            color: #fff;
+        }
+        .rank-tab button:hover:not(.active){
+            background:#d1ecf1;
+        }
+        .rank-list{
+            max-height: 260px;
+            overflow-y: auto;
+            padding-right:4px;
+        }
+        /*滚动条美化*/
+        .rank-list::-webkit-scrollbar{
+            width:4px;
+        }
+        .rank-list::-webkit-scrollbar-thumb{
+            background:#b8dde2;
+            border-radius:4px;
+        }
+        .rank-item{
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed #dde9ec;
+            cursor:pointer;
+            transition:0.2s;
+        }
+        .rank-item:hover{
+            background:#edf6f8;
+            border-radius:6px;
+            padding-left:6px;
+        }
+        .rank-num{
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #17a2b8;
+            color: #fff;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .rank-num.top1{background:#ff4d4f;}
+        .rank-num.top2{background:#ff7d00;}
+        .rank-num.top3{background:#ffc107;}
+        .rank-info{
+            flex:1;
+            line-height: 1.5;
+        }
+        .rank-name{
+            font-size:15px;
+            font-weight:bold;
+        }
+        .rank-author{
+            font-size:12px;
+            color:#666;
+        }
+        .rank-more-wrap{
+            text-align:center;
+            margin-top:12px;
+        }
+        .rank-more-btn{
+            border:none;
+            background:#17a2b8;
+            color:#fff;
+            padding:7px 16px;
+            border-radius:8px;
+            cursor:pointer;
+            font-size:13px;
+        }
+        .rank-more-btn:hover{
+            background:#138a9c;
+        }
+        .hot-title{
+            font-size: 20px;
+            color: #17a2b8;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .hot-title::before{
+            content: "";
+            width: 4px;
+            height: 18px;
+            background: #17a2b8;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+        .hot-book-list{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .hot-book-item{
+            padding: 9px 14px;
+            background: #f0f8fa;
+            border-radius: 30px;
+            font-size: 14px;
+            color: #17a2b8;
+            border: 1px solid #ccecef;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+        .hot-book-item:hover{
+            background: #e6f4f7;
+            transform: translateY(-2px);
+        }
+        .card-block{
+            background: #f8fbfc;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 20px;
+            border: 1px solid #edf4f6;
+        }
+        .card-title{
+            font-size: 16px;
+            color: #17a2b8;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .card-text{
+            font-size: 14px;
+            color: #555;
+            line-height: 1.7;
+        }
+        .grid-info{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .info-item{
+            background: #f0f8fa;
+            text-align: center;
+            padding: 16px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #444;
+            cursor:pointer;
+            transition:0.25s ease;
+            border:1px solid transparent;
+        }
+        .info-item:hover{
+            transform: translateY(-3px);
+            box-shadow:0 4px 12px rgba(23,162,184,0.12);
+            border-color:#ccecef;
+        }
+        .split-line{
+            height: 1px;
+            background: #dde9ec;
+            margin: 22px 0;
+        }
+        .tips{
+            font-size: 14px;
+            color: #666;
+            line-height: 1.8;
+            text-align: center;
+            padding: 0 10px;
+        }
+        .copyright{
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+            padding: 20px;
+            background: #f8fbfc;
+            margin-top: 10px;
+        }
+
+        /* ========== 弹窗模态框样式 ========== */
+        .modal-mask{
+            position:fixed;
+            left:0;
+            top:0;
+            width:100%;
+            height:100%;
+            background:rgba(0,0,0,0.45);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            z-index:999;
+            padding:15px;
+            opacity:0;
+            visibility:hidden;
+            transition:0.3s;
+        }
+        .modal-mask.show{
+            opacity:1;
+            visibility:visible;
+        }
+        .modal-box{
+            width:100%;
+            max-width:520px;
+            background:#fff;
+            border-radius:16px;
+            overflow:hidden;
+            transform: translateY(20px);
+            transition:0.3s;
+        }
+        .modal-mask.show .modal-box{
+            transform: translateY(0);
+        }
+        .modal-header{
+            padding:16px 20px;
+            background:linear-gradient(135deg,#17a2b8,#20c9d2);
+            color:#fff;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+        .modal-title{
+            font-size:17px;
+            font-weight:bold;
+        }
+        .modal-close{
+            background:none;
+            border:none;
+            color:#fff;
+            font-size:22px;
+            cursor:pointer;
+            line-height:1;
+        }
+        .modal-body{
+            padding:20px;
+            max-height:65vh;
+            overflow-y:auto;
+            line-height:1.8;
+            font-size:15px;
+            color:#333;
+        }
+        .modal-footer{
+            padding:14px 20px;
+            text-align:right;
+            border-top:1px solid #eee;
+        }
+        .modal-footer button{
+            padding:8px 18px;
+            border-radius:8px;
+            border:none;
+            background:#17a2b8;
+            color:#fff;
+            cursor:pointer;
+        }
+        .modal-footer button:hover{
+            background:#138a9c;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="top-banner">
+        <h2>纸语传音 · 图书检索系统</h2>
+        <p>纸语传音项目 | 智慧图书馆 · 精准馆藏查询服务</p>
+    </div>
+    <div class="main-wrap">
+        <div class="search-box">
+            <input type="text" id="bookInput" placeholder="输入书名、作者、书籍关键词、类目快速检索">
+            <button class="search-btn" onclick="searchBook()">立即查询</button>
+        </div>
+        <div class="filter-bar">
+            <div class="filter-row">
+                <select class="filter-select" id="sortType">
+                    <option value="default">综合排序</option>
+                    <option value="new">最新上架</option>
+                    <option value="hot">热门推荐</option>
+                    <option value="score">评分最高</option>
+                </select>
+                <input type="text" class="filter-input" id="authorInput" placeholder="按作者筛选">
+            </div>
+            <div class="filter-row">
+                <button class="filter-btn filter-confirm" onclick="filterBook()">确认筛选</button>
+                <button class="filter-btn filter-reset" onclick="resetFilter()">重置筛选</button>
+            </div>
+        </div>
+        <div class="result-box" id="resultBox">
+            💡 智能模糊检索已开启<br>支持名著/散文/科幻/历史/心理/艺术/少儿全品类查询
+        </div>
+        <!-- 排行榜：点击标题展开/收起【完善版】 -->
+        <div class="rank-box">
+            <div class="rank-title" onclick="toggleRank()">
+                <span>📊 图书排行榜</span>
+                <span class="rank-title-icon" id="rankArrow">▼</span>
+            </div>
+            <div class="rank-content" id="rankContent">
+                <div class="rank-tab">
+                    <button class="active" data-type="hot">热门榜</button>
+                    <button data-type="score">高分榜</button>
+                    <button data-type="new">最新榜</button>
+                </div>
+                <div class="rank-list" id="rankList"></div>
+                <div class="rank-more-wrap">
+                    <button class="rank-more-btn" onclick="openFullRankModal()">查看完整TOP20榜单</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4个可点击功能卡片 -->
+        <div class="grid-info">
+            <div class="info-item" onclick="openModal('allBook')">📚<br>全品类馆藏</div>
+            <div class="info-item" onclick="openModal('allTime')">⏰<br>全天候查询</div>
+            <div class="info-item" onclick="openModal('location')">📍<br>分类分区精准定位</div>
+            <div class="info-item" onclick="openModal('mobile')">📱<br>移动端适配</div>
+        </div>
+
+        <div class="hot-title">热门精选图书</div>
+        <div class="hot-book-list">
+            <div class="hot-book-item" onclick="autoSearch('小王子')">小王子</div>
+            <div class="hot-book-item" onclick="autoSearch('活着')">活着</div>
+            <div class="hot-book-item" onclick="autoSearch('三体')">三体</div>
+            <div class="hot-book-item" onclick="autoSearch('红楼梦')">红楼梦</div>
+            <div class="hot-book-item" onclick="autoSearch('三国演义')">三国演义</div>
+            <div class="hot-book-item" onclick="autoSearch('百年孤独')">百年孤独</div>
+            <div class="hot-book-item" onclick="autoSearch('人间失格')">人间失格</div>
+            <div class="hot-book-item" onclick="autoSearch('边城')">边城</div>
+            <div class="hot-book-item" onclick="autoSearch('朝花夕拾')">朝花夕拾</div>
+            <div class="hot-book-item" onclick="autoSearch('乡土中国')">乡土中国</div>
+            <div class="hot-book-item" onclick="autoSearch('流浪地球')">流浪地球</div>
+            <div class="hot-book-item" onclick="autoSearch('道德经')">道德经</div>
+            <div class="hot-book-item" onclick="autoSearch('许三观卖血记')">许三观卖血记</div>
+            <div class="hot-book-item" onclick="autoSearch('解忧杂货店')">解忧杂货店</div>
+            <div class="hot-book-item" onclick="autoSearch('局外人')">局外人</div>
+            <div class="hot-book-item" onclick="autoSearch('人类简史')">人类简史</div>
+            <div class="hot-book-item" onclick="autoSearch('月亮与六便士')">月亮与六便士</div>
+            <div class="hot-book-item" onclick="autoSearch('蛤蟆先生去看心理医生')">蛤蟆先生</div>
+        </div>
+        <div class="split-line"></div>
+        <div class="card-block">
+            <div class="card-title">📖 系统简介</div>
+            <div class="card-text">
+                本系统为「纸语传音·阅读回声」配套智慧图书查询平台，整合全馆六大楼层、二十余个图书分区，收录中外名著、文学散文、科幻悬疑、历史国学、心理成长、自然科普、艺术设计、经管法律、少儿读物等海量馆藏资源，助力师生快速查找书籍位置，营造便捷书香阅读环境。
+            </div>
+        </div>
+        <div class="card-block">
+            <div class="card-title">📌 借阅须知</div>
+            <div class="card-text">
+                1. 查询到书籍位置后，前往对应楼层书架自行取阅；<br>
+                2. 爱护馆藏书籍，禁止涂画、撕页、损坏装订；<br>
+                3. 读完请放回原位，文明借阅，共享书香；<br>
+                4. 稀缺书籍可前往服务台办理登记借阅。
+            </div>
+        </div>
+        <div class="card-block">
+            <div class="card-title">🗺️ 馆藏分区导航</div>
+            <div class="card-text">
+                1F 心理成长 | 自我提升 | 法律经管<br>
+                2F 外国文学 | 日系文学 | 诗歌诗集<br>
+                3F 现当代文学 | 青春文学 | 散文随笔<br>
+                4F 科幻读物 | 悬疑推理 | 纪实传记<br>
+                5F 国学经典 | 历史人文 | 社会社科<br>
+                6F 自然科普 | 艺术鉴赏 | 少儿读物
+            </div>
+        </div>
+        <div class="split-line"></div>
+        <div class="tips">
+            以书为媒，传递温度 · 纸语传音，听见阅读的回声<br>
+            全覆盖学生必读书目、课外拓展读物、经典传世名著
+        </div>
+    </div>
+    <div class="copyright">
+        © 2026 纸语传音 BookLink 阅读回声项目 | 智慧图书检索系统 V6.0 完美稳定版
+    </div>
+</div>
+
+<!-- 全局弹窗模态框 -->
+<div class="modal-mask" id="modalMask">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">标题</div>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-footer">
+            <button onclick="closeModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const bookData = [
+{"name":"小王子","author":"圣埃克苏佩里","score":4.9,"sort":"hot","time":"new","addr":"2楼 外国文学区 A01书架 第1层","desc":"治愈系经典童话，适合全年龄段阅读。","status":"可借阅"},
+{"name":"人间失格","author":"太宰治","score":4.7,"sort":"hot","time":"normal","addr":"2楼 外国文学区 A01书架 第3层","desc":"日系文学代表作，剖析人性与孤独。","status":"可借阅"},
+{"name":"百年孤独","author":"马尔克斯","score":4.8,"sort":"score","time":"normal","addr":"2楼 外国文学区 A02书架 第2层","desc":"魔幻现实主义文学巅峰之作。","status":"可预约"},
+{"name":"解忧杂货店","author":"东野圭吾","score":4.6,"sort":"hot","time":"new","addr":"2楼 日系文学 A11书架 第1层","desc":"温情治愈系暖心长篇小说。","status":"可借阅"},
+{"name":"月亮与六便士","author":"毛姆","score":4.7,"sort":"hot","time":"new","addr":"2楼 外国文学区 A01书架 第2层","desc":"关于梦想与现实的经典小说。","status":"可借阅"},
+{"name":"挪威的森林","author":"村上春树","score":4.6,"sort":"hot","time":"normal","addr":"2楼 外国文学区 A02书架 第1层","desc":"青春与成长、爱与孤独的故事。","status":"可借阅"},
+{"name":"追风筝的人","author":"卡勒德·胡赛尼","score":4.7,"sort":"hot","time":"normal","addr":"2楼 外国文学区 A02书架 第3层","desc":"关于友情、背叛和救赎的感人故事。","status":"可借阅"},
+{"name":"偷书贼","author":"马克斯·苏萨克","score":4.6,"sort":"normal","time":"new","addr":"2楼 外国文学区 A03书架 第1层","desc":"二战背景下女孩与文字的力量。","status":"可借阅"},
+{"name":"傲慢与偏见","author":"简·奥斯汀","score":4.7,"sort":"score","time":"normal","addr":"2楼 外国文学区 A03书架 第2层","desc":"经典爱情与阶级偏见的故事。","status":"可借阅"},
+{"name":"简爱","author":"夏洛蒂·勃朗特","score":4.7,"sort":"score","time":"normal","addr":"2楼 外国文学区 A03书架 第3层","desc":"女性独立、自尊与爱的成长史。","status":"可借阅"},
+{"name":"局外人","author":"阿尔贝·加缪","score":4.8,"sort":"score","time":"new","addr":"2楼外国文学区 A04书架第1层","desc":"存在主义文学代表，探讨荒诞与人生。","status":"可借阅"},
+{"name":"茶花女","author":"小仲马","score":4.6,"sort":"normal","time":"normal","addr":"2楼外国文学区 A04书架第2层","desc":"十九世纪法国经典爱情悲剧小说。","status":"可借阅"},
+{"name":"钢铁是怎样炼成的","author":"奥斯特洛夫斯基","score":4.7,"sort":"score","time":"normal","addr":"2楼外国文学区 A04书架第3层","desc":"革命理想与青年奋斗的不朽作品。","status":"可借阅"},
+{"name":"活着","author":"余华","score":4.9,"sort":"score","time":"normal","addr":"3楼 现当代文学 B01书架 第1层","desc":"诠释生命力量，中国当代文学经典。","status":"可借阅"},
+{"name":"围城","author":"钱钟书","score":4.8,"sort":"score","time":"normal","addr":"3楼 现当代文学 B01书架 第2层","desc":"讽刺幽默，描绘现实人生百态。","status":"馆内阅览"},
+{"name":"边城","author":"沈从文","score":4.7,"sort":"normal","time":"new","addr":"3楼 现当代文学 B01书架 第3层","desc":"湘西水乡的纯净唯美故事。","status":"可借阅"},
+{"name":"平凡的世界","author":"路遥","score":4.8,"sort":"score","time":"normal","addr":"3楼 现当代文学 B02书架 第1层","desc":"陕北城乡青年的奋斗与命运史诗。","status":"可借阅"},
+{"name":"骆驼祥子","author":"老舍","score":4.7,"sort":"score","time":"normal","addr":"3楼 现当代文学 B02书架 第2层","desc":"北平人力车夫的悲剧人生。","status":"可借阅"},
+{"name":"朝花夕拾","author":"鲁迅","score":4.6,"sort":"normal","time":"normal","addr":"3楼 现当代文学 B02书架 第3层","desc":"鲁迅先生回忆性散文集。","status":"可借阅"},
+{"name":"许三观卖血记","author":"余华","score":4.8,"sort":"hot","time":"new","addr":"3楼现当代文学 B03书架第1层","desc":"普通人在时代洪流里的苦难与温情。","status":"可借阅"},
+{"name":"受戒","author":"汪曾祺","score":4.7,"sort":"normal","time":"normal","addr":"3楼现当代文学 B03书架第2层","desc":"汪曾祺经典短篇，江南水乡纯净的人情美。","status":"可借阅"},
+{"name":"撒哈拉的故事","author":"三毛","score":4.6,"sort":"hot","time":"new","addr":"3楼现当代文学 B03书架第3层","desc":"三毛记录撒哈拉沙漠生活的散文集。","status":"可借阅"},
+{"name":"三体","author":"刘慈欣","score":4.9,"sort":"hot","time":"new","addr":"4楼 科幻科普 C01书架 第1层","desc":"国产科幻里程碑，宏大宇宙世界观。","status":"可借阅"},
+{"name":"三体2黑暗森林","author":"刘慈欣","score":4.9,"sort":"hot","time":"new","addr":"4楼 科幻科普 C01书架 第2层","desc":"宇宙黑暗森林法则的极致推演。","status":"可借阅"},
+{"name":"三体3死神永生","author":"刘慈欣","score":4.9,"sort":"hot","time":"new","addr":"4楼 科幻科普 C01书架 第3层","desc":"人类文明与宇宙终极命运。","status":"可借阅"},
+{"name":"流浪地球","author":"刘慈欣","score":4.8,"sort":"hot","time":"new","addr":"4楼 科幻科普 C02书架 第1层","desc":"地球逃离太阳系的科幻史诗。","status":"可借阅"},
+{"name":"球状闪电","author":"刘慈欣","score":4.7,"sort":"normal","time":"normal","addr":"4楼科幻科普 C02书架第2层","desc":"充满奇幻色彩的硬科幻长篇小说。","status":"可借阅"},
+{"name":"白夜行","author":"东野圭吾","score":4.8,"sort":"hot","time":"new","addr":"4楼悬疑推理 C03书架第1层","desc":"日本社会派推理长篇，跨越多年的悲剧。","status":"可预约"},
+{"name":"嫌疑人X的献身","author":"东野圭吾","score":4.7,"sort":"hot","time":"new","addr":"4楼悬疑推理 C03书架第2层","desc":"极致的诡计与深沉的爱情。","status":"可借阅"},
+{"name":"红楼梦","author":"曹雪芹","score":4.9,"sort":"score","time":"normal","addr":"5楼 国学经典 D01书架 第1层","desc":"中国古典四大名著之首。","status":"可借阅"},
+{"name":"三国演义","author":"罗贯中","score":4.9,"sort":"score","time":"normal","addr":"5楼 国学经典 D01书架 第2层","desc":"三国鼎立时期的政治、战争与谋略。","status":"可借阅"},
+{"name":"水浒传","author":"施耐庵","score":4.8,"sort":"score","time":"normal","addr":"5楼 国学经典 D02书架 第1层","desc":"一百零八位好汉的忠义与反抗。","status":"可借阅"},
+{"name":"西游记","author":"吴承恩","score":4.9,"sort":"score","time":"normal","addr":"5楼 国学经典 D02书架 第2层","desc":"唐僧师徒西天取经的神魔小说。","status":"可借阅"},
+{"name":"论语","author":"孔子弟子","score":4.9,"sort":"score","time":"normal","addr":"5楼 国学经典 D03书架 第1层","desc":"儒家思想核心，中国人的精神圣经。","status":"可借阅"},
+{"name":"道德经","author":"老子","score":4.9,"sort":"score","time":"normal","addr":"5楼 国学经典 D04书架 第1层","desc":"道家思想精髓，道法自然的智慧。","status":"可借阅"},
+{"name":"庄子","author":"庄子及其门人","score":4.8,"sort":"score","time":"normal","addr":"5楼国学经典 D04书架第2层","desc":"逍遥齐物，浪漫瑰丽的道家哲学。","status":"可借阅"},
+{"name":"史记","author":"司马迁","score":4.9,"sort":"score","time":"normal","addr":"5楼历史人文 E01书架第1层","desc":"中国第一部纪传体通史，史家之绝唱。","status":"可借阅"},
+{"name":"明朝那些事儿","author":"当年明月","score":4.7,"sort":"hot","time":"new","addr":"5楼历史人文 E01书架第2层","desc":"通俗幽默讲述明朝三百年历史。","status":"可借阅"},
+{"name":"人类简史","author":"尤瓦尔·赫拉利","score":4.8,"sort":"hot","time":"new","addr":"5楼社会人文 E02书架第1层","desc":"从认知革命到科学革命，解读人类发展。","status":"可借阅"},
+{"name":"乡土中国","author":"费孝通","score":4.7,"sort":"score","time":"normal","addr":"5楼 社会人文 E04书架 第1层","desc":"中国乡土社会结构与文化的经典分析。","status":"可借阅"},
+{"name":"蛤蟆先生去看心理医生","author":"罗伯特·戴博德","score":4.7,"sort":"hot","time":"new","addr":"1楼 心理成长 F01书架 第1层","desc":"心理咨询治愈抑郁的温暖故事。","status":"可借阅"},
+{"name":"被讨厌的勇气","author":"岸见一郎","score":4.7,"sort":"hot","time":"new","addr":"1楼 心理成长 F01书架 第2层","desc":"阿德勒心理学，接纳自我与他人。","status":"可借阅"},
+{"name":"非暴力沟通","author":"马歇尔·卢森堡","score":4.6,"sort":"hot","time":"new","addr":"1楼心理成长 F02书架第1层","desc":"教会人们如何观察感受需求请求。","status":"可借阅"},
+{"name":"乌合之众","author":"古斯塔夫·勒庞","score":4.6,"sort":"normal","time":"normal","addr":"1楼心理成长 F02书架第2层","desc":"大众心理研究经典，剖析群体心理。","status":"可借阅"},
+{"name":"穷查理宝典","author":"彼得·考夫曼","score":4.5,"sort":"normal","time":"new","addr":"1楼法律经管 F03书架第1层","desc":"查理芒格的智慧箴言与多元思维模型。","status":"可借阅"},
+{"name":"时间简史","author":"霍金","score":4.8,"sort":"score","time":"normal","addr":"6楼 科普自然 G01书架 第1层","desc":"宇宙起源、黑洞、时间的通俗科普。","status":"可借阅"},
+{"name":"昆虫记","author":"法布尔","score":4.7,"sort":"score","time":"normal","addr":"6楼 科普自然 G02书架 第1层","desc":"昆虫世界的生动观察与科普。","status":"可借阅"},
+{"name":"万物简史","author":"比尔·布莱森","score":4.7,"sort":"score","time":"new","addr":"6楼科普自然 G01书架第2层","desc":"通俗有趣讲述宇宙地球生命科学。","status":"可借阅"},
+{"name":"海底两万里","author":"凡尔纳","score":4.7,"sort":"score","time":"normal","addr":"6楼少儿读物 G03书架第1层","desc":"经典科幻冒险，鹦鹉螺号深海探险。","status":"可借阅"},
+{"name":"假如给我三天光明","author":"海伦凯勒","score":4.6,"sort":"normal","time":"normal","addr":"6楼少儿读物 G03书架第2层","desc":"身残志坚，对光明与生活的渴望。","status":"可借阅"}
+];
+
+// 搜索
+function searchBook() {
+    let key = document.getElementById("bookInput").value.trim();
+    let resDom = document.getElementById("resultBox");
+    if (!key) {
+        resDom.innerHTML = "⚠️ 请输入书名、作者或关键词再进行查询";
+        return;
+    }
+    let findBook = bookData.find(item => item.name.includes(key) || item.author.includes(key));
+    renderBook(findBook, resDom);
+}
+
+function filterBook(){
+    let sort = document.getElementById("sortType").value;
+    let authorKey = document.getElementById("authorInput").value.trim().toLowerCase();
+    let resDom = document.getElementById("resultBox");
+    let list = [...bookData];
+    if(authorKey){
+        list = list.filter(item => item.author.toLowerCase().includes(authorKey));
+    }
+    if(sort === "new"){
+        list = list.filter(item => item.time === "new");
+    }else if(sort === "hot"){
+        list = list.filter(item => item.sort === "hot");
+    }else if(sort === "score"){
+        list = list.filter(item => item.score >= 4.8);
+        list.sort((a,b)=> b.score - a.score);
+    }
+    if(list.length === 0){
+        resDom.innerHTML = "❌ 暂无匹配书籍";
+        return;
+    }
+    let randomIndex = Math.floor(Math.random() * list.length);
+    renderBook(list[randomIndex], resDom);
+}
+
+function resetFilter(){
+    document.getElementById("sortType").value = "default";
+    document.getElementById("authorInput").value = "";
+    document.getElementById("resultBox").innerHTML = "💡 筛选已重置，可重新检索书籍";
+}
+
+function renderBook(book, dom){
+    if(!book){
+        dom.innerHTML = "❌ 该书暂未录入馆藏";
+        return;
+    }
+    let star = "★".repeat(Math.floor(book.score));
+    dom.innerHTML = `
+        <div class="book-name">📖 书籍名称：${book.name}</div>
+        <div class="book-extra">👤 作者：${book.author}</div>
+        <div class="book-extra star">⭐ 评分：${book.score} ${star}</div>
+        <div class="book-addr">📍 馆藏位置：${book.addr}</div>
+        <div class="book-extra">📝 简介：${book.desc}</div>
+        <div class="book-extra">📦 馆藏状态：${book.status}</div>
+    `;
+}
+
+function autoSearch(title){
+    document.getElementById("bookInput").value = title;
+    searchBook();
+}
+
+// ========== 排行榜完善逻辑 ==========
+let rankOpenState = false;
+let currentRankType = "hot";
+
+// 展开收起带动画 +箭头旋转
+function toggleRank() {
+    rankOpenState = !rankOpenState;
+    const content = document.getElementById("rankContent");
+    const arrow = document.getElementById("rankArrow");
+    if(rankOpenState){
+        content.classList.add("open");
+        arrow.textContent = "▲";
+        showRank(currentRankType);
+    }else{
+        content.classList.remove("open");
+        arrow.textContent = "▼";
+    }
+}
+
+// 修复事件，使用委托
+document.querySelectorAll(".rank-tab button").forEach(btn=>{
+    btn.onclick = function(){
+        let t = this.dataset.type;
+        currentRankType = t;
+        showRank(t);
+        document.querySelectorAll(".rank-tab button").forEach(b=>b.classList.remove("active"));
+        this.classList.add("active");
+    }
+})
+
+function showRank(type){
+    let list = [...bookData];
+    if(type === "hot") list = list.filter(x=>x.sort==="hot");
+    if(type === "score") list = list.sort((a,b)=>b.score - a.score);
+    if(type === "new") list = list.filter(x=>x.time==="new");
+
+    let html = "";
+    if(list.length ===0){
+        html = "<div style='padding:15px;text-align:center;color:#777'>暂无榜单数据</div>";
+    }else{
+        list.slice(0,10).forEach((book,index)=>{
+            let num = index+1;
+            let cls = num<=3 ? "top"+num : "";
+            html += `
+            <div class="rank-item" onclick="autoSearch('${book.name}')">
+                <div class="rank-num ${cls}">${num}</div>
+                <div class="rank-info">
+                    <div class="rank-name">${book.name}</div>
+                    <div class="rank-author">${book.author} · ${book.score}分</div>
+                </div>
+            </div>`;
+        })
+    }
+    document.getElementById("rankList").innerHTML = html;
+}
+
+// 完整TOP20弹窗
+function openFullRankModal(){
+    let list = [...bookData];
+    if(currentRankType === "hot") list = list.filter(x=>x.sort==="hot");
+    if(currentRankType === "score") list.sort((a,b)=>b.score - a.score);
+    if(currentRankType === "new") list = list.filter(x=>x.time==="new");
+
+    let htmlBody = `<h4 style="margin-bottom:10px;">${currentRankType==='hot'?'热门榜':currentRankType==='score'?'高分榜':'最新榜'} · TOP20</h4>`;
+    list.slice(0,20).forEach((book,i)=>{
+        htmlBody += `<div style="padding:6px 0;border-bottom:1px dashed #eee;">
+        <b>${i+1}. ${book.name}</b> — ${book.author}｜${book.score}分
+        </div>`
+    })
+    openModalCustom("完整图书榜单",htmlBody);
+}
+
+// ========== 弹窗功能（四个卡片点击弹窗） ==========
+const modalContent = {
+    allBook:{
+        title:"📚 全品类馆藏",
+        body:`
+        <p>本图书馆覆盖全部主流图书分类，海量馆藏资源。</p>
+        <p><b>图书大类包含：</b></p>
+        <ul style="padding-left:20px;margin:8px 0;">
+            <li>外国文学、日系文学、诗歌散文</li>
+            <li>现当代文学、青春小说</li>
+            <li>科幻、悬疑推理、纪实传记</li>
+            <li>国学经典、历史人文、社会社科</li>
+            <li>心理成长、法律经管类读物</li>
+            <li>自然科普、艺术鉴赏、少儿必读书目</li>
+        </ul>
+        <p>你可以使用上方搜索框输入书名、作者快速检索任意分类书籍。</p>
+        `
+    },
+    allTime:{
+        title:"⏰ 全天候查询",
+        body:`
+        <p>本图书检索系统支持全天候在线查询服务，不受图书馆开闭馆时间限制。</p>
+        <p>✅ 24小时均可进行书籍检索、查看馆藏位置、借阅状态。</p>
+        <p>⚠️ 提示：线上只能查询信息；实体书籍取阅、借还操作仍然需要在图书馆开放时段到馆办理。</p>
+        <p>图书馆开放时间：周一至周日 8:30 — 21:00</p>
+        `
+    },
+    location:{
+        title:"📍 分类分区精准定位",
+        body:`
+        <p>系统每一本书都记录精确楼层+分区+书架编号+层号，帮你快速找到实体书。</p>
+        <p><b>馆藏分区总览：</b></p>
+        <div style="background:#f0f8fa;padding:12px;border-radius:8px;margin:10px 0;">
+1F 心理成长 | 自我提升 | 法律经管<br>
+2F 外国文学 | 日系文学 | 诗歌诗集<br>
+3F 现当代文学 | 青春文学 | 散文随笔<br>
+4F 科幻读物 | 悬疑推理 | 纪实传记<br>
+5F 国学经典 | 历史人文 | 社会社科<br>
+6F 自然科普 | 艺术鉴赏 | 少儿读物
+        </div>
+        <p>例如位置：<code>3楼 现当代文学 B01书架 第1层</code>，代表去3楼，找到B01书架第一层即可取书。</p>
+        `
+    },
+    mobile:{
+        title:"📱 移动端适配",
+        body:`
+        <p>本页面完全适配手机、平板等移动设备访问。</p>
+        <p>✅ 响应式布局，手机打开自动适配屏幕大小，不会出现横向滚动条。</p>
+        <p>✅ 按钮、输入框尺寸适合手指点击操作。</p>
+        <p>✅ 排行榜、弹窗、搜索筛选在手机端全部正常工作。</p>
+        <p>💡 使用方式：手机浏览器打开页面即可，无需下载APP。</p>
+        `
+    }
+}
+
+function openModal(key){
+    let data = modalContent[key];
+    openModalCustom(data.title,data.body);
+}
+
+function openModalCustom(title,html){
+    document.getElementById("modalTitle").innerText = title;
+    document.getElementById("modalBody").innerHTML = html;
+    document.getElementById("modalMask").classList.add("show");
+}
+
+function closeModal(){
+    document.getElementById("modalMask").classList.remove("show");
+}
+//点击遮罩关闭弹窗
+document.getElementById("modalMask").onclick = function(e){
+    if(e.target === this){
+        closeModal();
+    }
+}
+
+//页面初始化，排行榜默认加载热门榜
+window.onload = function(){
+    showRank("hot");
+}
+</script>
+</body>
+</html>
